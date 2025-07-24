@@ -1,0 +1,25 @@
+name: Code Check
+
+on:
+  workflow_call:
+
+jobs:
+  code_quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        deno-version: [v2.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ matrix.deno-version }}
+      - name: check
+        run: deno check ./src
+      - name: fmt
+        run: deno fmt ./src --check
+      - name: lint
+        run: deno lint ./src
+      - name: doc
+        run: deno doc --lint ./src
