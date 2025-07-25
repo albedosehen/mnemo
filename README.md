@@ -2,7 +2,7 @@
 
 A powerful TypeScript library for vector similarity search that seamlessly integrates Qdrant vector database with multiple embedding providers. Mnemo provides a unified, type-safe interface for storing, searching, and managing vector embeddings, making it easy to build semantic search applications, recommendation systems, and AI-powered memory systems.
 
-[![CI](https://github.com/albedosehen/timescaledb-client/workflows/CI/badge.svg)](https://github.com/albedosehen/timescaledb-client/actions)
+[![CI](https://github.com/albedosehen/mnemo/workflows/CI/badge.svg)](https://github.com/albedosehen/mnemo/actions)
 
 ## Features
 
