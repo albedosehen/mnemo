@@ -3,20 +3,20 @@
  * @module tests/types
  */
 
-import { assertEquals, assertInstanceOf, assertThrows } from 'https://deno.land/std@0.208.0/assert/mod.ts'
+import { assertEquals, assertInstanceOf } from 'https://deno.land/std@0.208.0/assert/mod.ts'
 import {
   QdrantAuthenticationError,
   QdrantConnectionError,
   QdrantError,
   QdrantValidationError,
-} from '../src/client.types.ts'
+} from '../../src/client/client.types.ts'
 import {
   EmbedderAuthenticationError,
   EmbedderConnectionError,
   EmbedderError,
   EmbedderRateLimitError,
   EmbedderValidationError,
-} from '../src/embedder/embedder.types.ts'
+} from '../../src/embedder/embedder.types.ts'
 
 Deno.test('QdrantError - base error class', () => {
   const error = new QdrantError('Test error')

@@ -26,9 +26,10 @@
 		"strict": true
 	},
 	"tasks": {
-		"test": "deno test --allow-read --allow-write --allow-net --allow-sys -q",
-		"test:unit": "deno test src/tests/unit --allow-read --allow-write --allow-net --allow-sys -q",
-		"test:integration": "deno test src/tests/integration/ --allow-read --allow-write --allow-net --allow-sys -q",
+		"test": "deno test ./tests --allow-read --allow-write --allow-net --allow-sys -q",
+		"test:unit": "deno test ./tests/unit --allow-read --allow-write --allow-net --allow-sys -q",
+		"test:integration": "deno test ./tests/integration/ --allow-read --allow-write --allow-net --allow-sys -q",
+		"test:e2e": "deno test ./tests/integration/ --allow-read --allow-write --allow-net --allow-sys -q",
 		"coverage": "deno coverage coverage/ --html",
 		"coverage:lcov": "deno coverage coverage/ --lcov --output=coverage.lcov",
 		"bench": "deno bench --allow-read --allow-write --allow-net --allow-sys",
