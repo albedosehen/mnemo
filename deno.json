@@ -2,7 +2,7 @@
 	"lock": true,
 
 	"name": "@albedosehen/mnemo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Mnemo is a an easy to use qdrant client and embedder.",
   "author": "Shon Thomas",
   "license": "MIT",
