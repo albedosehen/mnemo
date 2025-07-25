@@ -68,7 +68,17 @@ export class OllamaEmbedder extends BaseEmbedder {
    */
   private validateOllamaConfig(): void {
     try {
-      new URL(this.endpoint)
+      const url = new URL(this.endpoint)
+
+      // Check for valid HTTP/HTTPS protocol
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        throw new Error('Invalid protocol')
+      }
+
+      // Ensure hostname is present (not relative URL)
+      if (!url.hostname) {
+        throw new Error('No hostname')
+      }
     } catch {
       throw new EmbedderValidationError(
         `Invalid Ollama endpoint URL: ${this.endpoint}`,

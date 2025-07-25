@@ -7,7 +7,7 @@
 import type { VectorRecord, SearchQuery } from '../../src/client/client.types.ts'
 import { QdrantValidationError } from '../../src/client/client.types.ts'
 import { BaseEmbedder } from '../../src/embedder/embedder.ts'
-import { EmbedderConnectionError } from '../../src/embedder/embedder.types.ts'
+import { EmbedderConnectionError, EmbedderRateLimitError } from '../../src/embedder/embedder.types.ts'
 
 /**
  * Integration mock for QdrantClient with more realistic behavior
@@ -221,18 +221,19 @@ export class IntegrationMockEmbedder extends BaseEmbedder {
   private networkDelayMs: number
   private shouldFailOnText: string[]
   private vectorDimensions: number
+  private embeddingFailures = 0
+  private rateLimitFailures = 0
 
-  constructor(options: {
-    vectorDimensions?: number
-    simulateNetworkDelay?: boolean
-    networkDelayMs?: number
-    shouldFailOnText?: string[]
-  } = {}) {
+  constructor(
+    private dimensions = 384,
+    private simulateFailures = false,
+    private provider = 'integration-mock'
+  ) {
     super()
-    this.vectorDimensions = options.vectorDimensions || 768
-    this.shouldSimulateNetworkDelay = options.simulateNetworkDelay || false
-    this.networkDelayMs = options.networkDelayMs || 100
-    this.shouldFailOnText = options.shouldFailOnText || []
+    this.vectorDimensions = dimensions
+    this.shouldSimulateNetworkDelay = false
+    this.networkDelayMs = 100
+    this.shouldFailOnText = []
   }
 
   protected getDefaultModel(): string {
@@ -244,6 +245,12 @@ export class IntegrationMockEmbedder extends BaseEmbedder {
   }
 
   protected async performEmbed(text: string): Promise<number[]> {
+    // Check for rate limit failures first
+    this.checkRateLimit()
+
+    // Check for connection failures
+    this.checkConnection()
+
     // Simulate network delay if configured
     if (this.shouldSimulateNetworkDelay) {
       await new Promise(resolve => setTimeout(resolve, this.networkDelayMs))
@@ -280,6 +287,29 @@ export class IntegrationMockEmbedder extends BaseEmbedder {
   getVectorDimensions(): number {
     return this.vectorDimensions
   }
+
+  // Simulation helpers
+  simulateEmbeddingFailure(): void {
+    this.embeddingFailures++
+  }
+
+  simulateRateLimitFailure(): void {
+    this.rateLimitFailures++
+  }
+
+  private checkConnection(): void {
+    if (this.embeddingFailures > 0) {
+      this.embeddingFailures--
+      throw new EmbedderConnectionError('Simulated embedding failure', this.getProviderName(), new Error('Network error'))
+    }
+  }
+
+  private checkRateLimit(): void {
+    if (this.rateLimitFailures > 0) {
+      this.rateLimitFailures--
+      throw new EmbedderRateLimitError('Simulated rate limit', this.getProviderName(), 60)
+    }
+  }
 }
 
 /**
@@ -298,9 +328,12 @@ export function createIntegrationMockQdrantClient(config?: { url?: string; apiKe
  */
 export function createIntegrationMockEmbedder(options?: {
   vectorDimensions?: number
-  simulateNetworkDelay?: boolean
-  networkDelayMs?: number
-  shouldFailOnText?: string[]
+  simulateFailures?: boolean
+  provider?: string
 }) {
-  return new IntegrationMockEmbedder(options)
+  return new IntegrationMockEmbedder(
+    options?.vectorDimensions || 384,
+    options?.simulateFailures || false,
+    options?.provider || 'integration-mock'
+  )
 }

@@ -253,13 +253,15 @@ class IntegrationMockQdrantClient {
 class IntegrationMockEmbedder extends BaseEmbedder {
   private embeddingFailures = 0
   private rateLimitFailures = 0
+  private currentOperationShouldFail = false
+  private currentOperationRateLimited = false
 
   constructor(
     private dimensions = 384,
     private simulateFailures = false,
     private provider = 'mock'
   ) {
-    super()
+    super({ maxRetries: 0 }) // Disable retries for deterministic testing
   }
 
   protected getDefaultModel(): string {
@@ -270,8 +272,25 @@ class IntegrationMockEmbedder extends BaseEmbedder {
     return this.provider
   }
 
+  override async embed(text: string): Promise<number[]> {
+    try {
+      // For test mocks, bypass the retry mechanism and call performEmbed directly
+      this.validateInput(text)
+      const result = await this.performEmbed(text)
+      this.validateOutput(result)
+      return result
+    } finally {
+      // Reset operation flags after each complete embed operation
+      this.currentOperationShouldFail = false
+      this.currentOperationRateLimited = false
+    }
+  }
+
   protected async performEmbed(text: string): Promise<number[]> {
+    // Check for rate limit failures first
     this.checkRateLimit()
+
+    // Check for connection failures
     this.checkConnection()
 
     // Generate deterministic but realistic embeddings based on text
@@ -286,24 +305,24 @@ class IntegrationMockEmbedder extends BaseEmbedder {
   }
 
   // Simulation helpers
-  simulateEmbeddingFailure() {
+  simulateEmbeddingFailure(): void {
     this.embeddingFailures++
+    this.currentOperationShouldFail = true
   }
 
-  simulateRateLimitFailure() {
+  simulateRateLimitFailure(): void {
     this.rateLimitFailures++
+    this.currentOperationRateLimited = true
   }
 
-  private checkConnection() {
-    if (this.simulateFailures && this.embeddingFailures > 0) {
-      this.embeddingFailures--
+  private checkConnection(): void {
+    if (this.simulateFailures && this.currentOperationShouldFail) {
       throw new EmbedderConnectionError('Simulated embedding failure', this.provider, new Error('Network error'))
     }
   }
 
-  private checkRateLimit() {
-    if (this.simulateFailures && this.rateLimitFailures > 0) {
-      this.rateLimitFailures--
+  private checkRateLimit(): void {
+    if (this.simulateFailures && this.currentOperationRateLimited) {
       throw new EmbedderRateLimitError('Simulated rate limit', this.provider, 60)
     }
   }
